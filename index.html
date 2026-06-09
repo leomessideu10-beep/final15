@@ -1,0 +1,533 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>HAITAI FOODS PRESENTS</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@400;600;700;900&display=swap" rel="stylesheet">
+  <style>
+    :root { --black: #000; --white: #fff; }
+    * { box-sizing: border-box; }
+    html, body { width: 100%; height: 100%; margin: 0; overflow: hidden; background: #000; font-family: "Pretendard", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+    body { position: fixed; inset: 0; overscroll-behavior: none; touch-action: none; user-select: none; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+    img { display: block; pointer-events: none; user-select: none; -webkit-user-drag: none; }
+
+    .stage { position: fixed; inset: 0; width: 100vw; height: 100vh; overflow: hidden; background: #000; isolation: isolate; }
+    .scene-canvas { position: absolute; left: 50%; top: 50%; width: 1920px; height: 1080px; overflow: hidden; background: #000; transform-origin: center center; }
+
+    .bg, .success-scene, .free-scene img, .nill-image, .product-image, .product-ghost { position: absolute; inset: 0; width: 1920px; height: 1080px; object-fit: cover; object-position: center; }
+    .bg { opacity: 0; z-index: 1; }
+    .forest-shade { position: absolute; inset: 0; background: rgba(0,0,0,.45); opacity: 0; z-index: 2; pointer-events: none; }
+    .co { position: absolute; inset: 0; width: 1920px; height: 1080px; object-fit: contain; object-position: center; z-index: 5; transform-origin: 50% 50%; will-change: transform, opacity; }
+
+    .title, .interlude-text, .story-text, .final-title, .nation-title, .free-title, .nill-title, .value-title, .together-lines {
+      position: absolute; left: 960px; top: 540px; color: #fff; opacity: 0; text-align: center; word-break: keep-all; text-shadow: 0 0 24px rgba(0,0,0,.55); transform: translate(-50%, -50%); will-change: opacity, transform;
+    }
+    .title { width: 920px; z-index: 8; font-size: 14px; font-weight: 600; letter-spacing: .25em; line-height: 1; white-space: nowrap; text-transform: uppercase; }
+    .interlude-text { width: 820px; z-index: 8; font-size: 36px; font-weight: 700; line-height: 1.35; }
+    .story-text { width: 700px; z-index: 14; font-size: 26px; font-weight: 600; line-height: 1.8; }
+    .final-title, .nation-title, .free-title, .nill-title, .value-title, .together-lines { width: 980px; font-size: 56px; font-weight: 900; line-height: 1.22; }
+    .final-title { z-index: 14; }
+
+    .character { position: absolute; opacity: 0; transform-origin: 50% 100%; will-change: transform, opacity, height, width, left, right, bottom, top; }
+    .man { left: 960px; bottom: 32px; height: 760px; z-index: 6; object-fit: contain; filter: drop-shadow(0 18px 28px rgba(0,0,0,.55)); }
+    .creature { display: grid; place-items: center; pointer-events: none; cursor: default; }
+    .stage.is-final .creature { pointer-events: auto; }
+    .creature img { width: 100%; height: 100%; object-fit: contain; filter: brightness(1) drop-shadow(0 18px 28px rgba(0,0,0,.55)); transform: scale(1); transition: filter 240ms ease, transform 240ms ease; }
+    .creature-copy { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); width: 360px; color: #fff; opacity: 0; z-index: 2; font-size: 32px; font-weight: 700; line-height: 1.28; text-align: center; word-break: keep-all; text-shadow: 0 2px 18px rgba(0,0,0,.9); transition: opacity 220ms ease, transform 220ms ease; pointer-events: none; }
+    .stage.is-final .creature:hover img { filter: brightness(.48) drop-shadow(0 22px 34px rgba(0,0,0,.72)); transform: scale(1.045); }
+    .stage.is-final .creature:hover { z-index: 10; }
+    .stage.is-final .creature:hover .creature-copy { opacity: 1; transform: translate(-50%,-50%) scale(1.02); }
+    .creature-tiger { left: 20px; bottom: 76px; height: 680px; aspect-ratio: 1912/1428; z-index: 5; }
+    .creature-mammoth { right: -58px; bottom: 76px; height: 724px; aspect-ratio: 1710/1276; z-index: 5; }
+    .creature-eagle { left: 960px; top: 86px; width: 820px; aspect-ratio: 2400/1249; z-index: 7; transform-origin: 50% 50%; }
+    .creature-eagle .creature-copy { width: 340px; }
+    .hunt { object-fit: contain; filter: drop-shadow(0 18px 28px rgba(0,0,0,.58)); }
+    .mam2 { right: -20px; bottom: 76px; height: 820px; z-index: 5; }
+    .hunter { bottom: 86px; z-index: 6; }
+    .hunter-one { left: 288px; height: 520px; z-index: 4; }
+    .hunter-two { left: 38px; bottom: 65px; height: 410px; z-index: 6; }
+    .hunter-three { left: 288px; bottom: 70px; height: 430px; z-index: 7; }
+
+    .success-scene { opacity: 0; z-index: 11; transform-origin: 50% 50%; will-change: transform, opacity; }
+    .success-scene.is-shaking { animation: joy-shake .8s linear 1; }
+    .blackout { position: absolute; inset: 0; z-index: 13; background: rgba(0,0,0,.88); opacity: 0; pointer-events: none; }
+
+    .city-build { position: absolute; inset: 0; z-index: 15; pointer-events: none; }
+    .city-frame { position: absolute; left: 0; bottom: 0; width: 1920px; height: 1080px; overflow: visible; }
+    .city { position: absolute; left: 0; bottom: 0; opacity: 0; transform: translate3d(0,190px,0) scale(.985); transform-origin: 50% 100%; will-change: transform, opacity; filter: drop-shadow(0 -8px 34px rgba(0,0,0,.45)); }
+    .city-one { height: 1080px; width: auto; z-index: 2; }
+    .city-two { width: 1920px; height: auto; z-index: 3; }
+    .city-three { width: 1920px; height: 1080px; object-fit: contain; object-position: bottom left; z-index: 1; }
+    .city-dim, .free-dark, .nill-dark, .product-dark { position: absolute; inset: 0; opacity: 0; pointer-events: none; }
+    .city-dim { z-index: 16; background: rgba(0,0,0,.58); }
+    .nation-title { z-index: 17; }
+
+    .jail-scene { position: absolute; inset: 0; z-index: 18; opacity: 0; overflow: hidden; pointer-events: none; transform-origin: 50% 50%; will-change: transform, opacity; background: #000; }
+    .stage.is-jail .jail-scene { pointer-events: auto; }
+    .jail-bg { position: absolute; inset: 0; width: 1920px; height: 1080px; object-fit: cover; object-position: center; opacity: 0; pointer-events: none; transform: scale(1.035); filter: saturate(.86) contrast(1.03) brightness(.82); will-change: opacity, transform; }
+    .jail-bg-one { z-index: 0; } .jail-bg-two { z-index: 1; }
+    .jail-atmosphere { position: absolute; inset: 0; z-index: 2; pointer-events: none; background: radial-gradient(circle at 50% 62%, rgba(255,255,255,.16), transparent 34%), linear-gradient(180deg, rgba(0,0,0,.02), transparent 46%, rgba(0,0,0,.32)); }
+    .jail-hit { position: absolute; left: 960px; bottom: 132px; z-index: 3; display: grid; place-items: center; width: 1060px; padding: 0; border: 0; background: transparent; cursor: pointer; pointer-events: auto; transform: translateX(-50%); transform-origin: 50% 100%; color: #fff; font: inherit; transition: width 320ms ease, bottom 320ms ease; }
+    .jail-scene.is-destroyed .jail-hit { bottom: 164px; width: 1030px; }
+    .jail-hit:focus-visible { outline: 2px solid rgba(255,255,255,.78); outline-offset: 10px; }
+    .jail-image, .jail-ghost { width: 100%; height: auto; object-fit: contain; object-position: center; transform-origin: 50% 100%; }
+    .jail-image { position: relative; z-index: 2; filter: brightness(.98) contrast(.98) drop-shadow(0 18px 26px rgba(0,0,0,.48)); transition: filter 240ms ease, transform 240ms ease; }
+    .jail-scene:not(.is-destroyed) .jail-hit:hover .jail-image { filter: brightness(.38) contrast(.96) drop-shadow(0 24px 34px rgba(0,0,0,.68)); transform: scale(1.01); }
+    .jail-info { position: absolute; left: 50%; top: 50%; z-index: 4; width: 760px; color: #fff; opacity: 0; transform: translate(-50%,-48%); text-align: center; word-break: keep-all; text-shadow: 0 3px 24px rgba(0,0,0,.95); pointer-events: none; transition: opacity 220ms ease, transform 220ms ease; }
+    .jail-info-title, .jail-info-copy { display: block; }
+    .jail-info-title { margin-bottom: 18px; font-size: 54px; font-weight: 900; line-height: 1.15; }
+    .jail-info-copy { font-size: 27px; font-weight: 700; line-height: 1.55; }
+    .jail-scene:not(.is-destroyed) .jail-hit:hover .jail-info { opacity: 1; transform: translate(-50%,-50%); }
+    .jail-ghost { position: absolute; left: 0; top: 50%; z-index: 1; opacity: 0; transform: translateY(-50%) scale(1); filter: drop-shadow(0 28px 46px rgba(0,0,0,.5)); }
+    .jail-scene.is-shaking { animation: bastille-shake .86s cubic-bezier(.22,.82,.26,.99) 1; }
+    .jail-scene.is-shaking .jail-ghost-one { animation: jail-ghost-one .68s ease-out 1 both; }
+    .jail-scene.is-shaking .jail-ghost-two { animation: jail-ghost-two .72s ease-out 1 both; }
+    .jail-scene.is-shaking .jail-ghost-three { animation: jail-ghost-three .8s ease-out 1 both; }
+
+    .free-scene, .nill-scene, .ice-scene, .product-scene { position: absolute; inset: 0; opacity: 0; pointer-events: none; overflow: hidden; background: #000; will-change: opacity; }
+    .free-scene { z-index: 18; } .nill-scene { z-index: 22; } .ice-scene { z-index: 25; } .product-scene { z-index: 26; }
+    .free-dark { z-index: 19; background: rgba(0,0,0,.62); } .free-title { z-index: 20; }
+
+    .space-scene { position: absolute; inset: 0; z-index: 21; opacity: 0; pointer-events: none; overflow: hidden; background: #000; will-change: opacity; }
+    .stage.is-moon-focus .space-scene { pointer-events: auto; }
+    .space-bg { position: absolute; inset: 0; width: 1920px; height: 1080px; object-fit: cover; object-position: center; z-index: 1; }
+    .moon-wrap { position: absolute; left: 1306px; top: 162px; width: 360px; z-index: 3; pointer-events: none; cursor: default; transform-origin: 50% 50%; will-change: transform, left, top, width, opacity; }
+    .stage.is-moon-focus .moon-wrap { pointer-events: auto; cursor: pointer; }
+    .moon-image { width: 100%; height: auto; object-fit: contain; filter: brightness(1); transition: filter 240ms ease, transform 240ms ease; }
+    .moon-copy { position: absolute; left: 50%; top: 50%; width: 300px; transform: translate(-50%,-50%); opacity: 0; color: #fff; text-align: center; word-break: keep-all; pointer-events: none; text-shadow: 0 3px 24px rgba(0,0,0,.95); transition: opacity 220ms ease, transform 220ms ease; }
+    .moon-quote { display: block; font-size: 24px; font-weight: 700; line-height: 1.55; }
+    .moon-author { display: block; margin-top: 14px; font-size: 16px; font-weight: 600; letter-spacing: .04em; opacity: .86; }
+    .stage.is-moon-focus .moon-wrap:hover .moon-image { filter: brightness(.42); transform: scale(1.025); }
+    .stage.is-moon-focus .moon-wrap:hover .moon-copy { opacity: 1; transform: translate(-50%,-50%) scale(1.02); }
+    .apolo { position: absolute; left: 96px; top: 389px; width: 960px; height: auto; z-index: 2; transform-origin: 48% 52%; will-change: transform, opacity; }
+    .nill-dark { z-index: 23; background: rgba(0,0,0,.62); } .nill-title { z-index: 24; }
+
+    .value-title { z-index: 25; }
+    .ice-image { position: absolute; left: 960px; bottom: -128px; height: 756px; width: auto; max-width: 1500px; object-fit: contain; transform: translateX(-50%); transform-origin: 50% 100%; will-change: transform, opacity; filter: drop-shadow(0 22px 34px rgba(0,0,0,.42)); }
+    .product-before, .product-after, .product-ghost { position: absolute; inset: 0; opacity: 0; }
+    .product-after { z-index: 3; } .product-before { z-index: 1; } .product-ghost { z-index: 2; will-change: opacity, transform; }
+    .product-dark { z-index: 27; background: rgba(0,0,0,.62); }
+    .together-lines { z-index: 28; line-height: 1.4; }
+    .together-line { display: block; opacity: 0; transform: translateY(16px); will-change: opacity, transform; }
+    .brand-logo { position: absolute; left: 960px; top: 540px; z-index: 29; width: 540px; height: auto; opacity: 0; transform: translate(-50%,-50%) scale(.96); will-change: opacity, transform, left, top, width; }
+    .footer-gradient { position: absolute; inset: 0; z-index: 28; opacity: 0; pointer-events: none; background: linear-gradient(180deg, rgba(0,0,0,0) 34%, rgba(0,0,0,.52) 72%, rgba(0,0,0,.9) 100%); }
+    .final-footer { position: absolute; inset: 0; z-index: 31; opacity: 0; color: #fff; pointer-events: none; font-family: "Pretendard", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; will-change: opacity, transform; }
+    .footer-left { position: absolute; left: 110px; bottom: 105px; }
+    .footer-kicker { font-size: 24px; font-weight: 700; line-height: 1.2; }
+    .footer-title { margin-top: 14px; font-size: 38px; font-weight: 900; line-height: 1.18; letter-spacing: -.02em; }
+    .footer-center { position: absolute; left: 835px; bottom: 100px; font-size: 24px; font-weight: 600; line-height: 2; text-align: left; }
+    .footer-right { position: absolute; right: 130px; bottom: 128px; font-size: 24px; font-weight: 600; line-height: 1.4; text-align: left; }
+    .vignette { position: absolute; inset: 0; z-index: 9; pointer-events: none; background: radial-gradient(circle at 50% 45%, transparent 36%, rgba(0,0,0,.34) 100%), linear-gradient(180deg, rgba(0,0,0,.2), transparent 28%, rgba(0,0,0,.32)); opacity: 0; }
+
+    @keyframes joy-shake { 0%,100%{transform:translateX(0) rotate(0) scale(1.005)}5%{transform:translateX(-6px) rotate(-.5deg) scale(1.005)}10%{transform:translateX(6px) rotate(.5deg) scale(1.005)}15%{transform:translateX(-5px) rotate(-.45deg) scale(1.005)}20%{transform:translateX(5px) rotate(.45deg) scale(1.005)}25%{transform:translateX(-6px) rotate(-.5deg) scale(1.005)}30%{transform:translateX(6px) rotate(.5deg) scale(1.005)}35%{transform:translateX(-5px) rotate(-.4deg) scale(1.005)}40%{transform:translateX(5px) rotate(.4deg) scale(1.005)}45%{transform:translateX(-6px) rotate(-.5deg) scale(1.005)}50%{transform:translateX(6px) rotate(.5deg) scale(1.005)}55%{transform:translateX(-5px) rotate(-.45deg) scale(1.005)}60%{transform:translateX(5px) rotate(.45deg) scale(1.005)}65%{transform:translateX(-4px) rotate(-.35deg) scale(1.005)}70%{transform:translateX(4px) rotate(.35deg) scale(1.005)}75%{transform:translateX(-3px) rotate(-.25deg) scale(1.005)}80%{transform:translateX(3px) rotate(.25deg) scale(1.005)}90%{transform:translateX(-2px) rotate(-.12deg) scale(1.005)} }
+    @keyframes bastille-shake { 0%,100%{transform:translate3d(0,0,0) rotate(0) scale(1)}7%{transform:translate3d(-18px,10px,0) rotate(-1.4deg) scale(1.025)}14%{transform:translate3d(20px,-8px,0) rotate(1.25deg) scale(1.025)}21%{transform:translate3d(-16px,-12px,0) rotate(-1.15deg) scale(1.03)}28%{transform:translate3d(18px,12px,0) rotate(1.3deg) scale(1.025)}35%{transform:translate3d(-14px,8px,0) rotate(-1deg) scale(1.02)}42%{transform:translate3d(14px,-10px,0) rotate(.9deg) scale(1.02)}52%{transform:translate3d(-10px,6px,0) rotate(-.7deg) scale(1.015)}62%{transform:translate3d(10px,-5px,0) rotate(.55deg) scale(1.012)}74%{transform:translate3d(-6px,4px,0) rotate(-.35deg) scale(1.006)}86%{transform:translate3d(4px,-2px,0) rotate(.18deg) scale(1.003)} }
+    @keyframes jail-ghost-one { 0%{opacity:.52;transform:translate(-50px,-50%) scale(1.03)}100%{opacity:0;transform:translate(-120px,-50%) scale(1.12)} }
+    @keyframes jail-ghost-two { 0%{opacity:.42;transform:translate(42px,-50%) scale(1.02)}100%{opacity:0;transform:translate(116px,-50%) scale(1.14)} }
+    @keyframes jail-ghost-three { 0%{opacity:.34;transform:translate(0,-50%) scale(1.06)}100%{opacity:0;transform:translate(0,-50%) scale(1.2)} }
+  </style>
+</head>
+<body>
+  <main class="stage" id="stage" aria-label="Scroll-driven HAITAI FOODS cinematic scene">
+    <div class="scene-canvas" id="sceneCanvas">
+      <img class="bg forest" src="images/forrest.png" alt=""><div class="forest-shade"></div><img class="co" src="images/co.png" alt=""><div class="title">HAITAI FOODS PRESENTS</div><div class="interlude-text">우리들은 나약한 존재입나다.</div>
+      <div class="character creature creature-tiger" aria-label="Tiger: 형편없는 기동력"><img src="images/tiger.png" alt=""><span class="creature-copy">형편없는 기동력</span></div>
+      <div class="character creature creature-mammoth" aria-label="Mammoth: 평균 173CM의 작은 신장"><img src="images/mam.png" alt=""><span class="creature-copy">평균 173CM의 작은 신장</span></div>
+      <img class="character man" src="images/man.png" alt=""><div class="character creature creature-eagle" aria-label="Eagle: 절망적 제공권"><img src="images/eag.png" alt=""><span class="creature-copy">절망적 제공권</span></div>
+      <img class="character hunt mam2" src="images/mam2.png" alt=""><img class="character hunt hunter hunter-one" src="images/man1.png" alt=""><img class="character hunt hunter hunter-two" src="images/man2.png" alt=""><img class="character hunt hunter hunter-three" src="images/man3.png" alt=""><img class="success-scene" src="images/success.png" alt="">
+      <div class="blackout"></div><div class="story-text">나약한 개체들이 생존을 위해 무리짓기 시작한 것은<br>그리 어려운 도약은 아니었을 겁니다.</div><div class="final-title">'함께'는 생각보다 강력했습니다.</div>
+      <div class="city-build" aria-hidden="true"><div class="city-frame"><img class="city city-two" src="images/city2.png" alt=""><img class="city city-one" src="images/city1.png" alt=""><img class="city city-three" src="images/city3.png" alt=""></div></div>
+      <div class="city-dim"></div><div class="nation-title">함께 나라를 세우고,</div>
+      <div class="jail-scene" aria-label="Bastille prison interactive scene"><img class="jail-bg jail-bg-one" src="images/back.png" alt=""><img class="jail-bg jail-bg-two" src="images/back2.png" alt=""><div class="jail-atmosphere"></div><button class="jail-hit" type="button" aria-label="바스티유 감옥 파괴하기"><img class="jail-ghost jail-ghost-one" src="images/boom.png" alt=""><img class="jail-ghost jail-ghost-two" src="images/boom.png" alt=""><img class="jail-ghost jail-ghost-three" src="images/boom.png" alt=""><img class="jail-image" src="images/jail.png" alt="바스티유 감옥"><span class="jail-info" aria-hidden="true"><span class="jail-info-title">바스티유 감옥</span><span class="jail-info-copy">파리 동쪽에 위치했던 감옥으로,<br>1789년 7월 14일, 시민군이 이곳을<br> 공격함으로서 프랑스 혁명의 서막을 알린다</span></span></button></div>
+      <div class="free-scene" aria-hidden="true"><img src="images/free.png" alt=""></div><div class="free-dark"></div><div class="free-title">함께 자유를 되찾고</div>
+      <div class="space-scene" aria-hidden="true"><img class="space-bg" src="images/space.png" alt=""><div class="moon-wrap" aria-label="Moon quote interaction"><img class="moon-image" src="images/moon.png" alt="Moon"><span class="moon-copy" aria-hidden="true"><span class="moon-quote">이것은 한 인간에게는<br>작은 발걸음이지만,<br>인류에게는 위대한 도약이다.</span><span class="moon-author">Neil Armstrong</span></span></div><img class="apolo" src="images/apolo.png" alt="Apollo 13 spacecraft"></div>
+      <div class="nill-scene" aria-hidden="true"><img class="nill-image" src="images/nill.png" alt=""></div><div class="nill-dark"></div><div class="nill-title">함께 미지를 탐구했습니다</div>
+      <div class="value-title value-title-one">이것은 지금의 인류를 있게 한<br>‘함께’의 가치에 대한 이야기</div><div class="value-title value-title-two">그 위대한 가치를 담은<br>인류 역사상 가장 위대한 식품</div>
+      <div class="ice-scene" aria-hidden="true"><img class="ice-image" src="images/ice.png" alt=""></div>
+      <div class="product-scene" aria-hidden="true"><img class="product-image product-before" src="images/bef.png" alt=""><img class="product-ghost product-ghost-one" src="images/bef.png" alt=""><img class="product-ghost product-ghost-two" src="images/bef.png" alt=""><img class="product-ghost product-ghost-three" src="images/bef.png" alt=""><img class="product-image product-after" src="images/aft.png" alt=""></div>
+      <div class="product-dark"></div><div class="together-lines"><span class="together-line together-line-one">함께하는 이와</span><span class="together-line together-line-two">함께 즐기는</span><span class="together-line together-line-three">함께의 가치</span></div><img class="brand-logo" src="images/logo.png" alt=""><div class="footer-gradient"></div><footer class="final-footer" aria-hidden="true"><div class="footer-left"><div class="footer-kicker">HATAI FOOD PROJECT</div><div class="footer-title">THE GREAT<br>SSANGSSANG BAR</div></div><div class="footer-center"><div>KIM TAEHOON</div><div>SEOULTECH VCD 22</div><div>leomessideu10@gmail.com</div></div><div class="footer-right">© 2026, KIM TAEHOON, All rights reserved</div></footer><div class="vignette"></div>
+    </div>
+  </main>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+  <script>
+    gsap.registerPlugin(ScrollTrigger);
+
+    const DESIGN_WIDTH = 1920;
+    const DESIGN_HEIGHT = 1080;
+    const maxStep = 37;
+    let currentStep = 0;
+    let isAnimating = false;
+    let wheelLock = false;
+    let touchStartY = 0;
+    let isJailDestroyed = false;
+    let isMoonEntered = false;
+
+    const stage = document.querySelector("#stage");
+    const sceneCanvas = document.querySelector("#sceneCanvas");
+    const co = document.querySelector(".co");
+    const forest = document.querySelector(".forest");
+    const shade = document.querySelector(".forest-shade");
+    const title = document.querySelector(".title");
+    const interludeText = document.querySelector(".interlude-text");
+    const man = document.querySelector(".man");
+    const tiger = document.querySelector(".creature-tiger");
+    const mammoth = document.querySelector(".creature-mammoth");
+    const eagle = document.querySelector(".creature-eagle");
+    const mam2 = document.querySelector(".mam2");
+    const hunterOne = document.querySelector(".hunter-one");
+    const hunterTwo = document.querySelector(".hunter-two");
+    const hunterThree = document.querySelector(".hunter-three");
+    const successScene = document.querySelector(".success-scene");
+    const blackout = document.querySelector(".blackout");
+    const storyText = document.querySelector(".story-text");
+    const finalTitle = document.querySelector(".final-title");
+    const cityOne = document.querySelector(".city-one");
+    const cityTwo = document.querySelector(".city-two");
+    const cityThree = document.querySelector(".city-three");
+    const cities = [cityOne, cityTwo, cityThree];
+    const cityDim = document.querySelector(".city-dim");
+    const nationTitle = document.querySelector(".nation-title");
+    const jailScene = document.querySelector(".jail-scene");
+    const jailBgOne = document.querySelector(".jail-bg-one");
+    const jailBgTwo = document.querySelector(".jail-bg-two");
+    const jailHit = document.querySelector(".jail-hit");
+    const jailImage = document.querySelector(".jail-image");
+    const freeScene = document.querySelector(".free-scene");
+    const freeDark = document.querySelector(".free-dark");
+    const freeTitle = document.querySelector(".free-title");
+    const spaceScene = document.querySelector(".space-scene");
+    const moonWrap = document.querySelector(".moon-wrap");
+    const apolo = document.querySelector(".apolo");
+    const nillScene = document.querySelector(".nill-scene");
+    const nillDark = document.querySelector(".nill-dark");
+    const nillTitle = document.querySelector(".nill-title");
+    const valueTitleOne = document.querySelector(".value-title-one");
+    const valueTitleTwo = document.querySelector(".value-title-two");
+    const iceScene = document.querySelector(".ice-scene");
+    const iceImage = document.querySelector(".ice-image");
+    const productScene = document.querySelector(".product-scene");
+    const productBefore = document.querySelector(".product-before");
+    const productAfter = document.querySelector(".product-after");
+    const productGhosts = gsap.utils.toArray(".product-ghost");
+    const productDark = document.querySelector(".product-dark");
+    const togetherLines = document.querySelector(".together-lines");
+    const togetherLineOne = document.querySelector(".together-line-one");
+    const togetherLineTwo = document.querySelector(".together-line-two");
+    const togetherLineThree = document.querySelector(".together-line-three");
+    const brandLogo = document.querySelector(".brand-logo");
+    const footerGradient = document.querySelector(".footer-gradient");
+    const finalFooter = document.querySelector(".final-footer");
+    const vignette = document.querySelector(".vignette");
+    const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    function updateCanvasScale() {
+      const scale = Math.min(window.innerWidth / DESIGN_WIDTH, window.innerHeight / DESIGN_HEIGHT);
+      sceneCanvas.style.transform = `translate(-50%, -50%) scale(${scale})`;
+    }
+
+    const states = [
+      { coScale: 2, coOpacity: 1 },
+      { coScale: 1, coOpacity: 1 },
+      { coScale: 0.02, coOpacity: 0 },
+      { coScale: 0.02, coOpacity: 0 },
+      { coScale: 0.02, coOpacity: 0 }
+    ];
+    while (states.length <= maxStep) states.push({});
+
+    const stepDurations = [
+      0, 0.72, 0.32, 0.58, 0.46, 0.82, 0.86, 0.78, 0.78, 0.86,
+      0.58, 0.78, 0.74, 0.72, 0.6, 1, 0.7, 0.78, 0.78, 0.86,
+      0.78, 0.62, 0.7, 0.72, 0.92, 0.86, 0.5, 0.7, 0.66, 0.66,
+      0.82, 0.62, 0.88, 0.62, 0.62, 0.62, 0.72, 0.72
+    ];
+    const stepEase = [
+      "none", "power2.out", "power3.in", "power2.out", "power2.inOut",
+      "power3.out", "power3.inOut", "power3.out", "power3.out", "power2.out",
+      "power2.inOut", "power3.out", "power3.out", "power2.inOut", "power3.out",
+      "none", "power2.out", "power3.out", "power3.out", "power3.out",
+      "power3.out", "power2.inOut", "power2.out", "power2.inOut", "power4.in",
+      "power3.out", "power2.inOut", "power2.out", "power2.inOut", "power2.inOut",
+      "power3.out", "power2.inOut", "power3.out", "power2.out", "power2.out",
+      "power2.out", "power2.out", "power2.out"
+    ];
+
+    function initSets() {
+      updateCanvasScale();
+      gsap.set(co, { scale: 2, opacity: 1, x: 0, y: 0 });
+      gsap.set([forest, shade, title, interludeText, vignette, successScene, blackout, storyText, finalTitle, cityDim, nationTitle, jailScene, freeScene, freeDark, freeTitle, spaceScene, nillScene, nillDark, nillTitle, valueTitleOne, valueTitleTwo, iceScene, productScene, productDark, togetherLines, brandLogo, footerGradient, finalFooter], { opacity: 0 });
+      gsap.set(man, { xPercent: -50, y: 46, opacity: 0, height: 760, bottom: 32 });
+      gsap.set(tiger, { x: -1190, y: 12, opacity: 0 });
+      gsap.set(mammoth, { x: 1190, y: 16, opacity: 0 });
+      gsap.set(eagle, { xPercent: -50, y: -194, opacity: 0, scale: 0.96 });
+      gsap.set(mam2, { x: 650, y: 0, opacity: 0 });
+      gsap.set(hunterOne, { x: -346, y: 0, opacity: 0 });
+      gsap.set(hunterTwo, { x: -230, y: 10, opacity: 0 });
+      gsap.set(hunterThree, { x: -192, y: 8, opacity: 0 });
+      gsap.set(cities, { y: 190, opacity: 0, scale: 0.985 });
+      gsap.set([nationTitle, freeTitle, nillTitle, valueTitleOne, valueTitleTwo, togetherLines], { y: 28 });
+      gsap.set(jailScene, { opacity: 0 });
+      gsap.set(jailHit, { y: 40, scale: 0.96 });
+      gsap.set(jailBgOne, { opacity: 1 });
+      gsap.set(jailBgTwo, { opacity: 0 });
+      gsap.set(moonWrap, { left: 1306, top: 162, width: 360, xPercent: 0, yPercent: 0, scale: 1, opacity: 1 });
+      gsap.set(apolo, { left: 96, top: 389, width: 960, x: 0, y: 0, scale: 1, opacity: 1 });
+      gsap.set(iceImage, { xPercent: -50, y: 300, opacity: 0 });
+      gsap.set([productBefore, productAfter, ...productGhosts], { opacity: 0, scale: 1, x: 0, y: 0 });
+      gsap.set([togetherLineOne, togetherLineTwo, togetherLineThree], { opacity: 0, y: 16 });
+      gsap.set(brandLogo, { opacity: 0, left: 960, top: 540, width: 540, xPercent: -50, yPercent: -50, scale: 0.96 });
+      gsap.set(finalFooter, { opacity: 0, y: 24 });
+    }
+
+    function resetJailScene() {
+      isJailDestroyed = false;
+      jailImage.setAttribute("src", "images/jail.png");
+      jailImage.setAttribute("alt", "바스티유 감옥");
+      jailScene.classList.remove("is-destroyed", "is-shaking");
+      gsap.killTweensOf([jailBgOne, jailBgTwo]);
+      gsap.set(jailBgOne, { opacity: 1 });
+      gsap.set(jailBgTwo, { opacity: 0 });
+      gsap.set(jailImage, { scale: 1 });
+    }
+
+    function syncJailScene(options = {}) {
+      const animateBackground = options.animateBackground && !prefersReducedMotion;
+      jailImage.setAttribute("src", isJailDestroyed ? "images/boom.png" : "images/jail.png");
+      jailImage.setAttribute("alt", isJailDestroyed ? "파괴된 바스티유 감옥" : "바스티유 감옥");
+      jailScene.classList.toggle("is-destroyed", isJailDestroyed);
+      gsap.killTweensOf([jailBgOne, jailBgTwo]);
+      if (animateBackground) {
+        gsap.to(jailBgOne, { opacity: 0, duration: 0.64, ease: "power2.inOut" });
+        gsap.to(jailBgTwo, { opacity: 1, duration: 0.64, ease: "power2.inOut" });
+      } else {
+        gsap.set(jailBgOne, { opacity: isJailDestroyed ? 0 : 1 });
+        gsap.set(jailBgTwo, { opacity: isJailDestroyed ? 1 : 0 });
+      }
+      if (!isJailDestroyed) jailScene.classList.remove("is-shaking");
+    }
+
+    function destroyJail() {
+      if (!stage.classList.contains("is-jail") || isJailDestroyed) return;
+      isJailDestroyed = true;
+      syncJailScene({ animateBackground: true });
+      jailScene.classList.remove("is-shaking");
+      void jailScene.offsetWidth;
+      jailScene.classList.add("is-shaking");
+      gsap.fromTo(jailImage, { scale: 1.06 }, { scale: 1, duration: 0.48, ease: "power3.out" });
+      window.setTimeout(() => jailScene.classList.remove("is-shaking"), prefersReducedMotion ? 180 : 900);
+    }
+
+    function resetMoonScene() {
+      isMoonEntered = false;
+      stage.classList.remove("is-moon-focus");
+      gsap.killTweensOf([spaceScene, moonWrap, apolo, nillScene, nillDark, nillTitle]);
+      gsap.set(spaceScene, { opacity: 0 });
+      gsap.set(moonWrap, { left: 1306, top: 162, width: 360, xPercent: 0, yPercent: 0, scale: 1, opacity: 1 });
+      gsap.set(apolo, { left: 96, top: 389, width: 960, x: 0, y: 0, scale: 1, opacity: 1 });
+      gsap.set([nillScene, nillDark, nillTitle], { opacity: 0 });
+      gsap.set(nillTitle, { y: 28 });
+    }
+
+    function enterMoonScene() {
+      if (!stage.classList.contains("is-moon-focus") || isMoonEntered) return;
+      isMoonEntered = true;
+      isAnimating = true;
+      const tl = gsap.timeline({
+        onComplete: () => {
+          isAnimating = false;
+          currentStep = 26;
+          stage.classList.remove("is-moon-focus");
+        }
+      });
+      tl.to(moonWrap, { scale: 14, duration: prefersReducedMotion ? 0 : 0.78, ease: "power4.inOut" }, 0);
+      tl.to(nillScene, { opacity: 1, duration: prefersReducedMotion ? 0 : 0.28, ease: "power2.inOut" }, prefersReducedMotion ? 0 : 0.48);
+      tl.to(spaceScene, { opacity: 0, duration: prefersReducedMotion ? 0 : 0.28, ease: "power2.inOut" }, prefersReducedMotion ? 0 : 0.56);
+    }
+
+    function applyState(step, immediate = false) {
+      const state = states[step] || {};
+      const duration = immediate || prefersReducedMotion ? 0 : stepDurations[step];
+      const ease = stepEase[step] || "power2.out";
+
+      stage.classList.toggle("is-final", step === 9);
+      stage.classList.toggle("is-jail", step === 20);
+      stage.classList.toggle("is-moon-focus", step === 25 && !isMoonEntered);
+      successScene.classList.remove("is-shaking");
+      syncJailScene();
+      if (step !== 20) jailScene.classList.remove("is-shaking");
+
+      const tl = gsap.timeline({
+        defaults: { duration, ease },
+        onStart: () => { isAnimating = duration > 0; },
+        onComplete: () => { isAnimating = false; currentStep = step; }
+      });
+
+      const forestVisible = step >= 4 && step <= 13;
+      const titleVisible = step === 1;
+      const interludeVisible = step === 3;
+      const originalManVisible = step >= 5 && step <= 9;
+      const tigerVisible = step >= 7 && step <= 9;
+      const mammothVisible = step >= 8 && step <= 9;
+      const originalEagleVisible = step === 9;
+      const huntMammothVisible = step >= 10 && step <= 13;
+      const hunterOneVisible = step >= 11 && step <= 13;
+      const hunterGroupVisible = step >= 12 && step <= 13;
+      const dimmedHuntVisible = step === 13;
+      const storyVisible = step === 13;
+      const successVisible = step === 14 || step === 15;
+      const finalTitleVisible = step === 16;
+      const cityLayerOneVisible = step >= 17 && step <= 19;
+      const cityLayerTwoVisible = step >= 18 && step <= 19;
+      const cityLayerThreeVisible = step === 19;
+      const cityCaptionVisible = step === 19;
+      const jailVisible = step === 20;
+      const freeVisible = step >= 21 && step <= 22;
+      const freeCaptionVisible = step === 22;
+      const spaceVisible = step >= 23 && step <= 25 && !isMoonEntered;
+      const moonFocus = step === 25 && !isMoonEntered;
+      const apoloLaunch = step === 24;
+      const nillVisible = (step >= 26 && step <= 27) || (isMoonEntered && step <= 27);
+      const nillCaptionVisible = step === 27;
+      const cityLayerDelay = immediate || prefersReducedMotion ? 0 : 0.08;
+      const cityDimDelay = immediate || prefersReducedMotion ? 0 : 0.82;
+      const cityTextDelay = immediate || prefersReducedMotion ? 0 : 0.95;
+
+      if (step <= 3) {
+        tl.to(co, { scale: state.coScale, opacity: state.coOpacity, duration: step === 2 ? 0.3 : duration, ease: step === 2 ? "power4.in" : ease }, 0);
+      } else {
+        tl.set(co, { scale: 0.02, opacity: 0 }, 0);
+      }
+
+      tl.to(forest, { opacity: forestVisible ? 1 : 0 }, 0);
+      tl.to(shade, { opacity: forestVisible ? 1 : 0 }, 0);
+      tl.to(vignette, { opacity: forestVisible ? 1 : 0 }, 0);
+      tl.to(title, { opacity: titleVisible ? 1 : 0, duration: step === 1 ? 0.46 : Math.min(duration, 0.3), ease: step === 1 ? "power2.out" : "power2.inOut" }, step === 1 ? Math.max(0, duration - 0.42) : 0);
+      tl.to(interludeText, { opacity: interludeVisible ? 1 : 0, duration: step === 3 ? 0.46 : Math.min(duration, 0.28), ease: step === 3 ? "power2.out" : "power2.inOut" }, step === 3 ? 0.06 : 0);
+      tl.to(man, { opacity: originalManVisible ? 1 : 0, height: step >= 6 ? 370 : 760, bottom: step >= 6 ? 76 : 32, y: originalManVisible ? 0 : 46, duration: step === 5 ? 0.82 : duration, ease: step === 5 ? "power3.out" : ease }, step === 5 ? 0.08 : 0);
+      tl.to(tiger, { opacity: tigerVisible ? 1 : 0, x: tigerVisible ? 0 : -1190, y: tigerVisible ? 0 : 12 }, step === 7 ? 0.05 : 0);
+      tl.to(mammoth, { opacity: mammothVisible ? 1 : 0, x: mammothVisible ? 0 : 1190, y: mammothVisible ? 0 : 16 }, step === 8 ? 0.05 : 0);
+      tl.to(eagle, { opacity: originalEagleVisible ? 1 : 0, y: originalEagleVisible ? 0 : -194, scale: originalEagleVisible ? 1 : 0.96 }, step === 9 ? 0.04 : 0);
+      tl.to(mam2, { opacity: huntMammothVisible ? (dimmedHuntVisible ? 0.15 : 1) : 0, x: huntMammothVisible ? 0 : 650, y: 0, duration: step === 10 ? 0.58 : duration, ease: step === 10 ? "power2.out" : ease }, 0);
+      tl.to(hunterOne, { opacity: hunterOneVisible ? (dimmedHuntVisible ? 0.15 : 1) : 0, x: hunterOneVisible ? 0 : -346, y: 0, duration: step === 11 ? 0.78 : duration, ease: step === 11 ? "power3.out" : ease }, step === 11 ? 0.02 : 0);
+      tl.to(hunterTwo, { opacity: hunterGroupVisible ? (dimmedHuntVisible ? 0.15 : 1) : 0, x: hunterGroupVisible ? 0 : -230, y: hunterGroupVisible ? 0 : 10, duration: step === 12 ? 0.74 : duration, ease: step === 12 ? "power3.out" : ease }, step === 12 ? 0.02 : 0);
+      tl.to(hunterThree, { opacity: hunterGroupVisible ? (dimmedHuntVisible ? 0.15 : 1) : 0, x: hunterGroupVisible ? 0 : -192, y: hunterGroupVisible ? 0 : 8, duration: step === 12 ? 0.74 : duration, ease: step === 12 ? "power3.out" : ease }, step === 12 ? 0.04 : 0);
+      tl.to(blackout, { opacity: storyVisible ? 1 : 0, duration: step === 13 ? 0.62 : Math.min(duration, 0.42), ease: "power2.inOut" }, 0);
+      tl.to(storyText, { opacity: storyVisible ? 1 : 0, duration: step === 13 ? 0.62 : Math.min(duration, 0.34), ease: "power2.out" }, step === 13 ? 0.12 : 0);
+      tl.to(successScene, { opacity: successVisible ? 1 : 0, duration: step === 14 ? 0.52 : step === 16 ? 0.48 : Math.min(duration, 0.28), ease: step === 14 ? "power3.out" : "power2.inOut" }, 0);
+
+      if (step === 15 && !immediate && !prefersReducedMotion) {
+        tl.call(() => { successScene.classList.remove("is-shaking"); void successScene.offsetWidth; successScene.classList.add("is-shaking"); }, null, 0);
+      }
+
+      tl.to(finalTitle, { opacity: finalTitleVisible ? 1 : 0, duration: step === 16 ? 0.6 : Math.min(duration, 0.28), ease: "power2.out" }, step === 16 ? 0.1 : 0);
+      tl.to(cityTwo, { opacity: cityLayerOneVisible ? 1 : 0, y: cityLayerOneVisible ? 0 : 190, scale: cityLayerOneVisible ? 1 : 0.985, duration: step === 17 ? 0.78 : Math.min(duration, 0.28), ease: "power3.out" }, step === 17 ? cityLayerDelay : 0);
+      tl.to(cityOne, { opacity: cityLayerTwoVisible ? 1 : 0, y: cityLayerTwoVisible ? 0 : 190, scale: cityLayerTwoVisible ? 1 : 0.985, duration: step === 18 ? 0.78 : Math.min(duration, 0.28), ease: "power3.out" }, step === 18 ? cityLayerDelay : 0);
+      tl.to(cityThree, { opacity: cityLayerThreeVisible ? 1 : 0, y: cityLayerThreeVisible ? 0 : 190, scale: cityLayerThreeVisible ? 1 : 0.985, duration: step === 19 ? 0.86 : Math.min(duration, 0.28), ease: "power3.out" }, step === 19 ? cityLayerDelay : 0);
+      tl.to(cityDim, { opacity: cityCaptionVisible ? 1 : 0, duration: cityCaptionVisible ? 0.52 : Math.min(duration, 0.28), ease: "power2.inOut" }, step === 19 ? cityDimDelay : 0);
+      tl.to(nationTitle, { opacity: cityCaptionVisible ? 1 : 0, y: cityCaptionVisible ? 0 : 28, duration: cityCaptionVisible ? 0.58 : Math.min(duration, 0.24), ease: "power2.out" }, step === 19 ? cityTextDelay : 0);
+      tl.to(jailScene, { opacity: jailVisible ? 1 : 0, duration: step === 20 ? 0.78 : Math.min(duration, 0.32), ease: step === 20 ? "power3.out" : "power2.inOut" }, 0);
+      tl.to(jailHit, { y: jailVisible ? 0 : 40, scale: jailVisible ? 1 : 0.96, duration: step === 20 ? 0.78 : Math.min(duration, 0.32), ease: step === 20 ? "power3.out" : "power2.inOut" }, step === 20 ? 0.08 : 0);
+      tl.to(freeScene, { opacity: freeVisible ? 1 : 0, duration: step === 21 ? 0.62 : Math.min(duration, 0.32), ease: "power2.inOut" }, 0);
+      tl.to(freeDark, { opacity: freeCaptionVisible ? 1 : 0, duration: step === 22 ? 0.5 : Math.min(duration, 0.28), ease: "power2.inOut" }, 0);
+      tl.to(freeTitle, { opacity: freeCaptionVisible ? 1 : 0, y: freeCaptionVisible ? 0 : 28, duration: step === 22 ? 0.58 : Math.min(duration, 0.24), ease: "power2.out" }, step === 22 ? 0.12 : 0);
+      tl.to(spaceScene, { opacity: spaceVisible ? 1 : 0, duration: step === 23 ? 0.72 : Math.min(duration, 0.32), ease: "power2.inOut" }, 0);
+      tl.to(moonWrap, { left: moonFocus ? 960 : 1306, top: moonFocus ? 540 : 162, width: moonFocus ? 520 : 360, xPercent: moonFocus ? -50 : 0, yPercent: moonFocus ? -50 : 0, scale: moonFocus ? 1.18 : 1, opacity: spaceVisible ? 1 : 0, duration: step === 25 ? 0.86 : Math.min(duration, 0.32), ease: step === 25 ? "power3.out" : "power2.inOut" }, 0);
+      tl.to(apolo, { left: 96, top: 389, width: 960, x: apoloLaunch ? 884 : 0, y: apoloLaunch ? -281 : 0, scale: apoloLaunch ? 0.1 : 1, opacity: step === 23 ? 1 : apoloLaunch ? 0 : 0, duration: apoloLaunch ? 0.92 : Math.min(duration, 0.32), ease: apoloLaunch ? "power4.in" : "power2.out" }, 0);
+      tl.to(nillScene, { opacity: nillVisible ? 1 : 0, duration: step === 26 ? 0.5 : Math.min(duration, 0.32), ease: "power2.inOut" }, 0);
+      tl.to(nillDark, { opacity: nillCaptionVisible ? 1 : 0, duration: step === 27 ? 0.5 : Math.min(duration, 0.28), ease: "power2.inOut" }, 0);
+      tl.to(nillTitle, { opacity: nillCaptionVisible ? 1 : 0, y: nillCaptionVisible ? 0 : 28, duration: step === 27 ? 0.58 : Math.min(duration, 0.24), ease: "power2.out" }, step === 27 ? 0.12 : 0);
+      tl.to(valueTitleOne, { opacity: step === 28 ? 1 : 0, y: step === 28 ? 0 : 28, duration: step === 28 ? 0.58 : Math.min(duration, 0.24), ease: "power2.out" }, step === 28 ? 0.08 : 0);
+      tl.to(valueTitleTwo, { opacity: step === 29 ? 1 : 0, y: step === 29 ? 0 : 28, duration: step === 29 ? 0.58 : Math.min(duration, 0.24), ease: "power2.out" }, step === 29 ? 0.08 : 0);
+      tl.to(iceScene, { opacity: step === 30 ? 1 : 0, duration: step === 30 ? 0.38 : Math.min(duration, 0.24), ease: "power2.inOut" }, 0);
+      tl.to(iceImage, { opacity: step === 30 ? 1 : 0, xPercent: -50, y: step === 30 ? 0 : 300, duration: step === 30 ? 0.82 : Math.min(duration, 0.24), ease: "power3.out" }, 0);
+      tl.to(productScene, { opacity: step >= 31 && step <= 37 ? 1 : 0, duration: step === 31 ? 0.62 : Math.min(duration, 0.28), ease: "power2.inOut" }, 0);
+      tl.to(productBefore, { opacity: step === 31 ? 1 : 0, duration: step === 31 ? 0.62 : Math.min(duration, 0.2), ease: "power2.inOut" }, 0);
+
+      if (step === 32 && !immediate && !prefersReducedMotion) {
+        tl.set(productBefore, { opacity: 1 }, 0);
+        tl.set(productAfter, { opacity: 0 }, 0);
+        tl.set(productGhosts, { opacity: 0.42, scale: 1, x: 0, y: 0 }, 0);
+        tl.to(productGhosts[0], { opacity: 0, scale: 1.08, x: -76, duration: 0.72, ease: "power3.out" }, 0);
+        tl.to(productGhosts[1], { opacity: 0, scale: 1.1, x: 76, duration: 0.78, ease: "power3.out" }, 0);
+        tl.to(productGhosts[2], { opacity: 0, scale: 1.14, y: -22, duration: 0.86, ease: "power3.out" }, 0);
+        tl.to(productBefore, { opacity: 0, duration: 0.42, ease: "power2.inOut" }, 0.18);
+        tl.to(productAfter, { opacity: 1, duration: 0.62, ease: "power2.inOut" }, 0.16);
+      } else {
+        tl.to(productAfter, { opacity: step >= 32 && step <= 37 ? 1 : 0, duration: step === 32 ? 0.28 : Math.min(duration, 0.2), ease: "power2.inOut" }, 0);
+        tl.set(productGhosts, { opacity: 0, scale: 1, x: 0, y: 0 }, 0);
+      }
+
+      tl.to(productDark, { opacity: step >= 33 && step <= 37 ? 1 : 0, duration: step === 33 ? 0.5 : Math.min(duration, 0.24), ease: "power2.inOut" }, 0);
+      tl.to(togetherLines, { opacity: step >= 33 && step <= 35 ? 1 : 0, y: step >= 33 && step <= 35 ? 0 : 28, duration: 0.3, ease: "power2.out" }, 0);
+      tl.to(togetherLineOne, { opacity: step >= 33 && step <= 35 ? 1 : 0, y: step >= 33 && step <= 35 ? 0 : 16, duration: step === 33 ? 0.48 : Math.min(duration, 0.2), ease: "power2.out" }, step === 33 ? 0.1 : 0);
+      tl.to(togetherLineTwo, { opacity: step >= 34 && step <= 35 ? 1 : 0, y: step >= 34 && step <= 35 ? 0 : 16, duration: step === 34 ? 0.48 : Math.min(duration, 0.2), ease: "power2.out" }, step === 34 ? 0.1 : 0);
+      tl.to(togetherLineThree, { opacity: step === 35 ? 1 : 0, y: step === 35 ? 0 : 16, duration: step === 35 ? 0.48 : Math.min(duration, 0.2), ease: "power2.out" }, step === 35 ? 0.1 : 0);
+      const logoVisible = step === 36 || step === 37;
+      tl.to(brandLogo, { opacity: logoVisible ? 1 : 0, left: 960, top: step === 37 ? 380 : 540, width: step === 37 ? 460 : 540, xPercent: -50, yPercent: -50, scale: logoVisible ? 1 : 0.96, duration: step === 37 ? 0.72 : step === 36 ? 0.62 : Math.min(duration, 0.22), ease: "power2.out" }, step === 36 || step === 37 ? 0.1 : 0);
+      tl.to(footerGradient, { opacity: step === 37 ? 1 : 0, duration: step === 37 ? 0.55 : Math.min(duration, 0.22), ease: "power2.inOut" }, 0);
+      tl.to(finalFooter, { opacity: step === 37 ? 1 : 0, y: step === 37 ? 0 : 24, duration: step === 37 ? 0.62 : Math.min(duration, 0.22), ease: "power2.out" }, step === 37 ? 0.12 : 0);
+    }
+
+    function goToStep(nextStep) {
+      const clamped = gsap.utils.clamp(0, maxStep, nextStep);
+      if (clamped === currentStep || isAnimating) return;
+      if (currentStep <= 20 && clamped > 20 && !isJailDestroyed) return;
+      if (currentStep <= 25 && clamped > 25 && !isMoonEntered) return;
+      if (clamped < 20 || (clamped === 20 && currentStep !== 20)) resetJailScene();
+      if (clamped < 23 || (clamped <= 25 && isMoonEntered)) resetMoonScene();
+      applyState(clamped);
+    }
+
+    function hijackScroll(direction) {
+      if (wheelLock) return;
+      wheelLock = true;
+      goToStep(currentStep + direction);
+      window.setTimeout(() => { wheelLock = false; }, prefersReducedMotion ? 180 : 560);
+    }
+
+    function onWheel(event) {
+      event.preventDefault();
+      const delta = Math.abs(event.deltaY) >= Math.abs(event.deltaX) ? event.deltaY : event.deltaX;
+      if (Math.abs(delta) < 8) return;
+      hijackScroll(delta > 0 ? 1 : -1);
+    }
+
+    function onKeydown(event) {
+      const forwardKeys = ["ArrowDown", "PageDown", " ", "Enter"];
+      const backKeys = ["ArrowUp", "PageUp", "Backspace"];
+      if (forwardKeys.includes(event.key)) { event.preventDefault(); hijackScroll(1); }
+      if (backKeys.includes(event.key)) { event.preventDefault(); hijackScroll(-1); }
+      if (event.key === "Home") { event.preventDefault(); goToStep(0); }
+      if (event.key === "End") { event.preventDefault(); goToStep(maxStep); }
+    }
+
+    function onTouchStart(event) { touchStartY = event.touches[0].clientY; }
+    function onTouchMove(event) {
+      event.preventDefault();
+      if (!touchStartY) return;
+      const deltaY = touchStartY - event.touches[0].clientY;
+      if (Math.abs(deltaY) < 32) return;
+      hijackScroll(deltaY > 0 ? 1 : -1);
+      touchStartY = event.touches[0].clientY;
+    }
+
+    jailHit.addEventListener("click", destroyJail);
+    moonWrap.addEventListener("click", enterMoonScene);
+    window.addEventListener("wheel", onWheel, { passive: false });
+    window.addEventListener("keydown", onKeydown);
+    window.addEventListener("touchstart", onTouchStart, { passive: true });
+    window.addEventListener("touchmove", onTouchMove, { passive: false });
+    window.addEventListener("resize", () => {
+      updateCanvasScale();
+      ScrollTrigger.refresh();
+    });
+
+    ScrollTrigger.create({ trigger: stage, start: "top top", end: "+=1" });
+    initSets();
+    applyState(0, true);
+  </script>
+</body>
+</html>
